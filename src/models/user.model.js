@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -31,7 +33,6 @@ const userSchema = new mongoose.Schema(
     },
     photoUrl: {
       type: String,
-      required: true,
       validate: function (value) {
         if (!validator.isURL(value)) {
           throw new Error("Invalid photo url: " + value);
@@ -64,6 +65,26 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.methods.getJWT = async function () {
+  const user = this;
+  const token = await jwt.sign(
+    {
+      id: user._id,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+  return token;
+};
+
+userSchema.methods.validatePassword = async function (userPassword) {
+  const user = this;
+  const isPasswordValid = await bcrypt.compare(userPassword, user.password);
+  return isPasswordValid;
+};
 
 const User = mongoose.model("User", userSchema);
 
