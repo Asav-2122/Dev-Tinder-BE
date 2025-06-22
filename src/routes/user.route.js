@@ -1,11 +1,15 @@
 const { Router } = require("express");
+const authMiddleware = require("../middleware/auth.middleware");
 const {
-  handleUserSignIn,
-  handleUserSignUp,
-} = require("../controller/user.controller.js");
+  handleViewConnections,
+  handleViewRequest,
+} = require("../controller/user.controller");
+
 const userRouter = Router();
 
-userRouter.post("/signup", handleUserSignUp);
-userRouter.post("/signin", handleUserSignIn);
+//two routes here user can see all the received request and all his connections
+
+userRouter.get("/view-connections", authMiddleware, handleViewConnections);
+userRouter.get("/view-request", authMiddleware, handleViewRequest);
 
 module.exports = userRouter;

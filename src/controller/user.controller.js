@@ -1,106 +1,78 @@
+const Connection = require("../models/connection.model");
 const User = require("../models/user.model");
-const {
-  userSignUpValidationSchema,
-  userSignInValidationSchema,
-} = require("../utils/validations");
-const bcrypt = require("bcrypt");
 
-const handleUserSignUp = async (req, res) => {
+const handleViewConnections = async (req, res) => {
   try {
-    const validation = userSignUpValidationSchema.safeParse(req.body);
+    const userId = req.userId;
 
-    if (!validation.success) {
-      return res.status(400).json({
-        errors:
-          validation.error.flatten().fieldErrors ||
-          "all the fields are required!",
-      });
-    }
+    // const user = await User.findById(userId);
 
-    //checking if user with same email exits or not
+    // if (!user) {
+    //   return res.status(404).json({
+    //     error: "User not found!",
+    //   });
+    // }
 
-    const isUserAlreadyExists = await User.findOne({
-      email: req.body.email,
+    const connections = await Connection.find({
+      $or: [
+        {
+          fromUser: userId,
+          status: "accepted",
+        },
+        {
+          toUser: userId,
+          status: "accepted",
+        },
+      ],
+    })
+      .populate("fromUser", "firstName lastName photoUrl")
+      .populate("toUser", "firstName lastName photoUrl");
+
+    const allFormatedConnections = connections?.map((ele) => {
+      if (ele.fromUser._id.toString() === userId.toString()) {
+        return ele.toUser;
+      }
+      return ele.fromUser;
     });
 
-    if (isUserAlreadyExists) {
-      return res.status(400).json({
-        error: "email already in use!",
-      });
-    }
-
-    const hashPassword = await bcrypt.hash(req.body.password, 8);
-
-    const user = await User.create({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      userName: req.body.userName,
-      password: hashPassword,
-      age: req.body.age,
-      email: req.body.email.toLowerCase(),
-      skills: req.body.skills,
-      gender: req.body.gender,
-      photoUrl: req.body.photoUrl,
-    });
-
-    return res.status(201).json({
-      message: "User created successfully!",
+    return res.status(200).json({
+      message: "all the connections fetched successfully!",
       data: {
-        id: user._id,
-        firstName: user.firstName,
+        connections: allFormatedConnections,
       },
     });
   } catch (error) {
-    console.log("Error while signUp" + error.message);
-    res.status(500).json({
-      error:
-        "Something went wrong while creating your account, please try again later!",
+    console.log("Error while fetching all connection ", error.message);
+    return res.status(500).json({
+      error: "Something went wrong please try again later!",
     });
   }
 };
 
-const handleUserSignIn = async (req, res) => {
+const handleViewRequest = async (req, res) => {
   try {
-    const { email, password } = userSignInValidationSchema.parse(req.body);
+    const userId = req.userId;
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(401).json({ error: "Invalid email or password1" });
-    }
+    const allRequest = await Connection.find({
+      toUser: userId,
+      status: "intrested",
+    }).populate("fromUser", "firstName lastName photoUrl");
 
-    const isPasswordValid = await user.validatePassword(password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        error: "Invalid email or password!",
-      });
-    }
-
-    const token = await user.getJWT();
-
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 8 * 3600000),
-    });
     return res.status(200).json({
-      message: "User login seccessfully!",
+      message: "fetched all the recevied request successfully!",
       data: {
-        userName: user.userName,
-        photoUrl: user.photoUrl,
-        firstName: user.firstName,
+        allRequest,
       },
     });
   } catch (error) {
-    console.log("Error while signIn" + error.message);
-    // Handling Zod validation errors generically
-    if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
-    // Handling other errors (e.g., DB issues)
-    res.status(500).json({ error: "Something went wrong" });
+    console.log("Error while fetching pending request ", error.message);
+    return res.status(500).json({
+      error: "Something went wrong please try again later!",
+    });
   }
 };
 
 module.exports = {
-  handleUserSignUp,
-  handleUserSignIn,
+  handleViewConnections,
+  handleViewRequest,
 };

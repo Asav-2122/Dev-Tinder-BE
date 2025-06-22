@@ -1,4 +1,4 @@
-import { z } from "zod";
+const { z } = require("zod");
 
 const userSignUpValidationSchema = z.object({
   firstName: z
