@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const userValidationSchema = z.object({
+const userSignUpValidationSchema = z.object({
   firstName: z
     .string()
     .min(3, "First name must be at least 3 characters")
@@ -53,6 +53,12 @@ const userValidationSchema = z.object({
   skills: z.array(z.string()).max(20, "Maximum 20 skills allowed"),
 });
 
+const userSignInValidationSchema = z.object({
+  email: z.string().email("Invalid email or password"),
+  password: z.string().min(1, "Invalid email or password"),
+});
+
 module.exports = {
-  userValidationSchema,
+  userSignUpValidationSchema,
+  userSignInValidationSchema,
 };
