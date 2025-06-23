@@ -58,7 +58,34 @@ const userSignInValidationSchema = z.object({
   password: z.string().min(1, "Invalid email or password"),
 });
 
+const userEditProfileSchema = z.object({
+  firstName: z
+    .string()
+    .min(3, "First name must be at least 3 characters")
+    .max(50, "First name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z]+$/, "First name should only contain letters")
+    .optional(),
+  lastName: z
+    .string()
+    .min(3, "Last name must be at least 3 characters")
+    .max(50, "Last name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z]+$/, "Last name should only contain letters")
+    .optional(),
+  userName: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores"
+    )
+    .optional(),
+  skills: z.array(z.string()).max(20, "Maximum 20 skills allowed").optional(),
+  photoUrl: z.string().url("Invalid URL format").optional(),
+});
+
 module.exports = {
   userSignUpValidationSchema,
   userSignInValidationSchema,
+  userEditProfileSchema,
 };
