@@ -4,7 +4,6 @@ const {
   handleViewProfile,
   handleEditProfile,
 } = require("../controller/profile.controller");
-//here two routes will be there view profile and edit profile
 
 const profileRouter = Router();
 

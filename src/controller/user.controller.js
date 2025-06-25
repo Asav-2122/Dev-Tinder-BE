@@ -86,9 +86,6 @@ const handleGetAllUsers = async (req, res) => {
         message: "user not found!",
       });
     }
-
-    //implement pagination
-
     // here we have to check for few cases while building this API
     /*  
       1. "The logged-in user should not see his card"
