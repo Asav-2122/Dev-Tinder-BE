@@ -75,7 +75,10 @@ const handleViewRequest = async (req, res) => {
 const handleGetAllUsers = async (req, res) => {
   try {
     const userId = req.userId;
-
+    let page = req.query.page || 1;
+    let limit = req.query.limit || 10;
+    limit = limit > 50 ? 10 : limit;
+    const skip = (page - 1) * limit;
     const user = await User.findById(userId);
 
     if (!user) {
@@ -117,7 +120,9 @@ const handleGetAllUsers = async (req, res) => {
         ],
       },
       "firstName lastName gender skills photoUrl age username"
-    );
+    )
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       message: "users fetched successfully!",
