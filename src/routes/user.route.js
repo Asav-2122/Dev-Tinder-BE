@@ -3,13 +3,13 @@ const authMiddleware = require("../middleware/auth.middleware");
 const {
   handleViewConnections,
   handleViewRequest,
+  handleGetAllUsers,
 } = require("../controller/user.controller");
 
 const userRouter = Router();
 
-//two routes here user can see all the received request and all his connections
-
 userRouter.get("/view-connections", authMiddleware, handleViewConnections);
 userRouter.get("/view-request", authMiddleware, handleViewRequest);
+userRouter.get("/feed", authMiddleware, handleGetAllUsers);
 
 module.exports = userRouter;

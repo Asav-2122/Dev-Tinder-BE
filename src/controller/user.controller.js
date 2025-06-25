@@ -72,7 +72,69 @@ const handleViewRequest = async (req, res) => {
   }
 };
 
+const handleGetAllUsers = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found!",
+      });
+    }
+
+    //implement pagination
+
+    // here we have to check for few cases while building this API
+    /*  
+      1. "The logged-in user should not see his card"
+      2. "The logged-in user should not see cards of users to whom they have already sent a connection request or have ignored."
+      3. "The logged-in user should not see cards of users with whom they are already connected."
+
+    */
+
+    const loggedInUserConnections = await Connection.find({
+      $or: [{ fromUser: userId }, { toUser: userId }],
+    })
+      .populate("fromUser", "firstName lastName")
+      .populate("toUser", "firstName lastName");
+
+    const modifiedUsersConnections = loggedInUserConnections?.map((ele) => {
+      if (ele?.fromUser?._id?.toString() === userId?.toString()) {
+        return ele?.toUser?._id;
+      }
+      return ele?.fromUser?._id;
+    });
+
+    const allUsers = await User.find(
+      {
+        $and: [
+          { _id: { $nin: modifiedUsersConnections } },
+          {
+            _id: { $ne: userId },
+          },
+        ],
+      },
+      "firstName lastName gender skills photoUrl age username"
+    );
+
+    return res.status(200).json({
+      message: "users fetched successfully!",
+      data: {
+        allUsers,
+      },
+    });
+  } catch (error) {
+    console.log("Error while fetching all the users ", error.message);
+    return res.status(500).json({
+      error: "Something went wrong please try again later!",
+    });
+  }
+};
+
 module.exports = {
   handleViewConnections,
   handleViewRequest,
+  handleGetAllUsers,
 };
